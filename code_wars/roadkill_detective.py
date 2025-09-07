@@ -11,7 +11,7 @@ class SymbolSeqenceChecker:
         self.sequence = self.__build_seqence()
     
     def __build_seqence(self):
-        self.sequence = []  # Initialize the sequence list
+        self.sequence = []
         current_symbol = Symbol('', 0)
         for letter in self.letter_seqence:
             if letter == current_symbol.letter:
@@ -20,47 +20,39 @@ class SymbolSeqenceChecker:
                 if current_symbol.frequency > 0:
                     self.sequence.append(current_symbol)
                 current_symbol = Symbol(letter, 1)
-        # Don't forget to append the last symbol
         if current_symbol.frequency > 0:
             self.sequence.append(current_symbol)
         return self.sequence
 
     def same_sequence(self, seqence):
-        compare_sequence = seqence
+        compare_sequence = seqence.copy()
         if len(compare_sequence) != len(self.sequence):
             return False
-        if compare_sequence[-1].letter == self.sequence[0].letter:
-            compare_sequence = compare_sequence.reverse()
-        for i in range(len(seqence)):
-            if seqence[i].letter != self.sequence[i].letter or seqence[i].frequency != self.sequence[i].frequency:
-                return False
-        return True
-        return seqence == self.sequence
-    
-    
-
-def letter_freq(letters):
-    freq = {}
-    for letter in letters:
-        freq[letter] = freq.get(letter, 0) + 1
-    return freq
+        
+        # Try both normal and reversed order
+        def sequences_match(seq1, seq2):
+            for i in range(len(seq1)):
+                if (seq1[i].letter != seq2[i].letter or 
+                    seq1[i].frequency > seq2[i].frequency):
+                    return False
+            return True
+        
+        # Try normal order first
+        if sequences_match(compare_sequence, self.sequence):
+            return True
+        
+        # Try reversed order
+        compare_sequence.reverse()
+        return sequences_match(compare_sequence, self.sequence)
 
 def prepare_letters(photo):
     return ''.join(filter(lambda letter: letter.isalpha(), photo))
 
 def can_form_animal(animal_name, photo):
-    roadkill_letters = prepare_letters(photo)
-    roadkill_freq = letter_freq(roadkill_letters)
-    animal_freq = letter_freq(animal_name)
-    if roadkill_freq.keys() != animal_freq.keys():
-        return False
-    print(roadkill_freq.keys() != animal_freq.keys())
-    print(roadkill_freq.keys())
-    print(animal_freq.keys())
-    for letter, needed_freq in animal_freq.items():
-        if roadkill_freq.get(letter, 0) < needed_freq:
-            return False
-    return True
+    roadkill_seqence = SymbolSeqenceChecker(prepare_letters(photo))
+    animal_seqence = SymbolSeqenceChecker(animal_name)
+
+    return roadkill_seqence.same_sequence(animal_seqence.sequence)
 
 def find_animal(photo):
     for animal in ANIMALS:
@@ -68,15 +60,11 @@ def find_animal(photo):
             return animal
     return '??'
 
-
-
 def road_kill(photo):
     if (' ' in photo):
         return '??'
     prepared_photo_letters = prepare_letters(photo)
     symbol_seqence_checker = SymbolSeqenceChecker(prepared_photo_letters)
-    for symbol in symbol_seqence_checker.sequence:
-        print(symbol.letter, symbol.frequency)
     return find_animal(photo)
 
 road_kill('==========h===yyyyyy===eeee=n==a========')
