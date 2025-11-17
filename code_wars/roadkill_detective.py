@@ -65,6 +65,7 @@ def road_kill(photo):
         return '??'
     prepared_photo_letters = prepare_letters(photo)
     symbol_seqence_checker = SymbolSeqenceChecker(prepared_photo_letters)
+    print(f"animal found: {find_animal(photo)}")
     return find_animal(photo)
 
 road_kill('==========h===yyyyyy===eeee=n==a========')
