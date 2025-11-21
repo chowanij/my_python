@@ -1,21 +1,23 @@
-from log_parser import ParsedLogs
+from log_parser import LogParser, ParsedLog
+
 
 class LogValidator:
-    REQUIRED_NUM_OF_TOKENS = 3
-    def __init__(self, log_to_validate: ParsedLogs) -> None:
+    def __init__(self, log_to_validate: ParsedLog, require_quote_id: bool = False) -> None:
         self.to_validate = log_to_validate
+        self.require_quote_id = require_quote_id
 
-    def validate(self) -> ParsedLogs:
-        """perform validation on log item"""
-        self.__check_tokens_number()
+    def validate(self) -> ParsedLog:
+        """Perform validation on a parsed log item."""
+        self.__validate_basic_fields()
         return self.to_validate
 
-    def __check_tokens_number(self) -> None:
-        token_count = 0
-        for k, v in self.to_validate.items():
-            if k == 'log_lvl' and v != 'EMPTY':
-                token_count += 1
-            if k != 'is_valid' and v:
-                token_count += 1
-        if token_count >= 3:
-            self.to_validate['is_valid'] = True
+    def __validate_basic_fields(self) -> None:
+        timestamp_ok = bool(self.to_validate.get("timestamp", "").strip())
+        level_ok = self.to_validate.get("log_lvl") in LogParser.LOG_LEVELS
+        message_ok = bool(self.to_validate.get("message", "").strip())
+        quote_ok = True
+
+        if self.require_quote_id:
+            quote_ok = bool(self.to_validate.get("quote_id", "").strip())
+
+        self.to_validate["is_valid"] = bool(timestamp_ok and level_ok and message_ok and quote_ok)
